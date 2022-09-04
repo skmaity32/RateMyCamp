@@ -16,10 +16,18 @@
                     <a class="nav-link" href="/campgrounds/new">New Campground</a>
                 </li>
             </ul>
-            <form class="d-flex" role="search">
+            <!-- <form class="d-flex" role="search">
                 <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-secondary" type="submit">Search</button>
-            </form>
+            </form> -->
+            <div class="navbar-nav ml-auto">
+                <% if(!currentUser) {%>
+                    <a class="nav-link" href="/login">Log In</a>
+                    <a class="nav-link" href="/register">Sign Up</a>
+                <% } else {%>
+                    <a class="nav-link" href="/logout">Log Out</a>
+                <% } %>
+            </div>
         </div>
     </div>
 </nav>

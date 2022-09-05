@@ -2,31 +2,18 @@ const express = require('express');
 // without mergeParams = true, we can't access id from req.params
 const router = express.Router({ mergeParams: true });
 
+const catchAsync = require('../utils/catchAsync');
+const { validateReview, isLoggedIn, isReviewAuthor } = require('../middleware');
+
 const Campground = require('../models/campground');
 const Review = require('../models/review');
 
-const ExpressError = require('../utils/ExpressError');
-const catchAsync = require('../utils/catchAsync');
-
-// Review schema (Joi) for server side form validation
-const { reviewSchemaForValidation } = require('../schemasForValidation');
-
-// middleware to perform server side review form validation
-const validateReview = (req, res, next) => {
-    const { error } = reviewSchemaForValidation.validate(req.body);
-    if (error) {
-        const msg = error.details.map(el => el.message).join(',');
-        throw new ExpressError(msg, 400);
-    } else {
-        next();
-    }
-}
-
 // Add a review
-router.post('/', validateReview, catchAsync(async (req, res) => {
+router.post('/', isLoggedIn, validateReview, catchAsync(async (req, res) => {
     const { id } = req.params;
     const campground = await Campground.findById(id);
     const newReview = await new Review(req.body.review);
+    newReview.author = req.user._id;
     campground.reviews.push(newReview);
     await newReview.save();
     await campground.save();
@@ -35,7 +22,7 @@ router.post('/', validateReview, catchAsync(async (req, res) => {
 }))
 
 // Delete a review
-router.delete('/:reviewId', catchAsync(async (req, res) => {
+router.delete('/:reviewId', isLoggedIn, isReviewAuthor, catchAsync(async (req, res) => {
     const { id, reviewId } = req.params;
     // The $pull operator removes from an existing array all instances 
     // of a value or values that match a specified condition.
